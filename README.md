@@ -1,69 +1,88 @@
-# Cipher Encryption
+# File Encryption (v2.0.0)
 
-A simple Python script that encrypts or decrypts text files using a custom character-shift cipher.
+A secure command-line tool written in Python that protects files using authenticated **AES-128 encryption**. 
 
-## What it does
+This application is an upgrade from legacy Version 1.0.0 character-shift cipher. By processing files as binary data (`rb`/`wb`) and leveraging the industry-standard **Fernet (cryptography)** framework, the tool securely encrypts and decrypts text documents, multimedia images, audio tracks, and PDFs without risking data corruption.
 
-The script reads a text-based file, applies a key-based transformation to each character, and saves the result to a new file.
+## Key Features
 
-It supports the following file types:
+- **Authenticated AES-128 Encryption:** Uses the secure Fernet blueprint, combining AES encryption in CBC mode with HMAC authentication to prevent file tampering.
+- **Expanded File Support:** Securely processes `.txt`, `.json`, `.csv`, `.py`, `.html`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.mp3`, `.wav`, `.docx`, and `.pdf` files.
+- **Hidden Key Input:** Leverages secure terminal inputs to mask your decryption key as you type, keeping it hidden from shoulder-surfers.
+- **Dynamic File Preservation:** Intelligently extracts the original file's extension to automatically format timestamped outputs.
+- **Non-Destructive Operations:** Writes data strictly to brand-new files, leaving your source assets completely untouched.
 
-- .txt
-- .json
-- .csv
-- .py
-- .html
+---
 
-The cipher alphabet includes:
+## 🛠️ Getting Started
 
-- space
-- punctuation
-- digits
-- uppercase letters
-- lowercase letters
+### Prerequisites
+- Python 3.x
+- The `cryptography` third-party library.
 
-This means each character is shifted through a custom character set instead of a standard alphabet-only Caesar cipher.
-
-## How to run
-
-From the command line:
-
+### Installation
+Install the official cryptographic dependency via your terminal:
 ```bash
-python cipher_encryption_file.py path/to/file.txt
+pip install cryptography
 ```
 
-The script will then ask you to choose:
-
-1. Encryption mode (`e`) or decryption mode (`d`)
-2. A numeric key
-3. Whether to save the output with a default file name or a custom name
-
-## Example
-
+### How to Run
+Run the script by passing the target file path directly as a command-line argument:
 ```bash
-python cipher_encryption_file.py sample.txt
+python secure_encryptor.py path/to/your/file.png
 ```
 
-Then the script may prompt:
+---
+
+## CLI User Interface Walkthrough
+
+### 1. Encryption Mode (`e`)
+When encrypting, the script automatically handles key generation and displays your secret key. **You must save this key** to open the file later.
 
 ```text
 Which mode would you like to do.
 To encrypt a file enter 'e' and to decrypt a file enter 'd': e
-Enter a key: 3
-To save a file in the name you want to give it enter 'new' and to save it using a default name enter 'default' (decryptedData_time.txt): default
+Generating a key...
+The generated key is: gAAAAABm...[Your Secret Key String]...
+Please save the key as it is required to decrypt the file!!!
+File encrypted successfully.🔒
+
+Do you want to name the file or use the default naming (decryptedData_time.png)
+(Enter 'yes' for new name or 'no' for default): no
+```
+*Output generated:* `encryptedData_2026-09-06_22-45-00.png`
+
+### 2. Decryption Mode (`d`)
+When decrypting, your typing is safely hidden from view. If the key is wrong or the file is modified, the system safely triggers a security rejection.
+
+```text
+Which mode would you like to do.
+To encrypt a file enter 'e' and to decrypt a file enter 'd': d
+Enter a key to decrypt the file: ********************************************
+File decrypted successfully.🔓
 ```
 
-The output will be written to a new file such as:
+---
 
-- `encryptedData_2026-08-31_12-00-00.txt`
+## ⚠️ Compatibility & Portfolio Note
 
-## Notes
+- **Breaking Changes:** Version 2.0.0 is a complete cryptographic rebuild. It is **not backwards-compatible** with files encrypted using the Version 1.0.0 shift cipher.
+- **Looking for V1?** If you need to access the legacy character-shift cipher code or documentation designed for simple `.txt` operations, please refer directly to the [v1.0.0 Source Code Release](https://github.com/JNR016/Cipher-encryption/releases/tag/v1.0.0).
 
-- The script only accepts the supported file extensions listed above.
-- The key must be a whole number.
-- Decryption uses the same key in the opposite direction automatically.
-- The output is saved as a new file and does not overwrite the original input file.
+---
 
-## License
+## 📈 Evolution History
+
+### [v2.0.0] - Current Release
+- **Added:** Integrated `cryptography.fernet` for robust authenticated AES-128 operations.
+- **Added:** Secure hidden password inputs via the native `getpass` module.
+- **Added:** Broad support for multimedia and document extensions (`.png`, `.pdf`, `.docx`, etc.).
+- **Removed:** Legacy character substitution loops.
+
+### [v1.0.0] - Legacy Release
+- Initial proof-of-concept custom character-shift cipher.
+- Text-only restriction (`.txt`, `.json`, `.csv`, `.py`, `.html`).
+
+## 📄 License
 
 This project is licensed under the MIT License. See the LICENSE file for details.

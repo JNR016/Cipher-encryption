@@ -1,6 +1,8 @@
-import string
 import sys
 from datetime import datetime
+from cryptography.fernet import Fernet, InvalidToken
+import getpass
+import os
 
 def cipher_encryption():
     
@@ -10,7 +12,9 @@ def cipher_encryption():
         print("Usage: python script.py <filename.txt>")
         sys.exit(1)
     
-    allowed_extensions = (".txt", ".json", ".csv", ".py", ".html")   
+    allowed_extensions = (".txt", ".json", ".csv", ".py", ".html",
+                          ".png", ".jpg", ".jpeg", ".gif",
+                          ".mp3", ".wav", ".docx", ".pdf")   
     
     # Check what type of file did the user use
     if not sys.argv[1].lower().endswith(allowed_extensions):
@@ -19,83 +23,81 @@ def cipher_encryption():
         print("Allowed_extensions are " + " ".join(allowed_extensions))
         sys.exit(1)
          
-    # characters we will use to encrypt a file    
-    characters = " " + string.punctuation + string.digits + string.ascii_letters
     encrypted_text = ""
     decrypted_text = ""
     
     mode = input("Which mode would you like to do.\nTo encrypt a file enter 'e' and to decrypt a file enter 'd': ")
     if mode not in ["e", "d"]:
         print("Invalid mode selection")
-        sys.exit(1)
-        
-    try:    
-        key = int(input("Enter a key: "))
-    except ValueError:
-        print("Error: The key must be a whole number.")
         sys.exit(1)    
         
     file_path = sys.argv[1]
+    extension = os.path.splitext(file_path)[1]
     
-    # When mode is decrypt then the key should be negative
-    if mode == "d":
-        key = -key
-        
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            for line in file:
-                for words in line:
-                    index = characters.find(words)
-                        
-                    if index == -1:                  # If the index for that letter isn't found then it should add it as it is
-                        if mode == "d":
-                            decrypted_text += words
-                        elif mode == "e":
-                            encrypted_text += words    
-                    else:
-                        new_index = (index + key) % len(characters) # To make sure that the new index isn't greater than the length of the characters
-                        if mode == "d":
-                            decrypted_text += characters[new_index]
-                        elif mode =="e":               
-                            encrypted_text += characters[new_index]
-         
-        # Make the user choose whether they want to name the file themselves or use the default naming                
-        choice = input("To save a file in the name you want to give it enter 'new' and to save it using a default name enter 'default' (decryptedData_time.txt): ").lower()
+
+        if mode == "e":
+            print(f"Generating a key...")
+            key = Fernet.generate_key()
+            print(f"The generated key is: {(key.decode())}\nPlease save the key as it is required to decrypt the file!!!")
+            cipher_suite = Fernet(key)
+        elif mode == "d":
+            key = getpass.getpass("Enter a key to decrypt the file:")
+            key = key.encode()    
+            cipher_suite = Fernet(key)
         
-        while choice not in ["default", "new"]:
-            print("Invalid input. Please choose between 'default' and 'new'.")
-            choice = input("Try again: ")
         
-        # Write the encrypted/decrypted text into a new file    
-        if choice == "default":
-            now = datetime.now()
+        with open(file_path, "rb") as file:
+            file_data = file.read()
             
+            if mode == "e":
+                encrypted_text = cipher_suite.encrypt(file_data)
+                print("File encrypted successfully.🔒")
+            elif mode == "d":
+                decrypted_text = cipher_suite.decrypt(file_data)
+                print("File decrypted successfully.🔓")
+                    
+
+            
+        # Make the user choose whether they want to name the file themselves or use the default naming                
+        choice = input(f"Do you want to name the file or use the default naming (decryptedData_time{extension})\n(Enter 'yes' for new name or 'no' for default): ").lower()
+            
+        while choice not in ["yes", "no"]:
+            print("Invalid input. Please choose between 'no' and 'yes'.")
+            choice = input("Try again: ")
+            
+        # Write the encrypted/decrypted text into a new file    
+        if choice == "no":
+            now = datetime.now()
+                
             if mode == "d":
-                new_file = "decryptedData_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
-                with open(new_file, "w", encoding="utf-8") as file:
-                    file.writelines(decrypted_text)
+                new_file = "decryptedData_" + now.strftime("%Y-%m-%d_%H-%M-%S") + extension
+                with open(new_file, "wb") as file:
+                    file.write(decrypted_text)
             elif mode == "e":
-                new_file = "encryptedData_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"                      
-                with open(new_file, "w", encoding="utf-8") as file:
-                    file.writelines(encrypted_text)  
-                        
+                new_file = "encryptedData_" + now.strftime("%Y-%m-%d_%H-%M-%S") + extension                      
+                with open(new_file, "wb") as file:
+                    file.write(encrypted_text)  
+                            
         else:
             new_file = input("Enter a name to save the file to and don't forget to specify the file extension: ")
             if not new_file.lower().endswith(allowed_extensions):
-                new_file += ".txt"
+                new_file += extension
             if mode == "d":
-                with open(new_file, "w", encoding="utf-8") as file:
-                    file.writelines(decrypted_text)
+                with open(new_file, "wb") as file:
+                    file.write(decrypted_text)
             elif mode == "e":                      
-                with open(new_file, "w", encoding="utf-8") as file:
-                    file.writelines(encrypted_text)
-                
-        print(f"Results saved to {new_file}")     
+                with open(new_file, "wb") as file:
+                    file.write(encrypted_text)
+                    
+            print(f"Results saved to {new_file}")     
                
     except FileNotFoundError:
         print("File not found, check spelling")
         sys.exit(1)
-        
+    except InvalidToken:
+        print("Error: Invalid key or corrupted file. Decryption failed.")
+        sys.exit(1)    
     except PermissionError:
         print("Error: Access denied.")
         
