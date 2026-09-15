@@ -19,7 +19,6 @@ def cipher_encryption():
     # Check what type of file did the user use
     if not sys.argv[1].lower().endswith(allowed_extensions):
         print("Invalid file type!!!")
-        print("This script supports plain-text files.")
         print("Allowed_extensions are " + " ".join(allowed_extensions))
         sys.exit(1)
          
